@@ -174,7 +174,7 @@ uv run demo.py --log runs/real.jsonl swap --mode real
 `--log`는 하위 명령(`swap`) 앞에 둡니다. 로컬 Ollama(기본 주소 `http://localhost:11434`)가 켜져 있으면 `local` 행만 진짜로 호출하고, 나머지 세 공급자는 키가 없으므로 MOCK 표시를 단 채 진행합니다. Ollama가 꺼져 있으면 안내 문구를 내고 mock으로 진행합니다(종료 코드 0).
 
 ![real 모드 swap: local 행만 실제 호출](docs/images/07-real-swap.png)
-<sub>그림 7. local 행의 MOCK 칸이 "실제"로 바뀐다.</sub>
+<sub>그림 7. local 행의 MOCK 칸이 "실제"로 바뀐다. 이 그림은 생각이 길어져 2048 토큰을 다 쓴 실행이라 빈 응답 안내가 나왔다. 기본값 2048에서도 가끔 이런 일이 생긴다. 아래 발췌는 다른 실행(답이 나온 경우)의 값이다.</sub>
 
 실행 결과(발췌, 작성 환경에서 한 번 실행한 값):
 
@@ -183,9 +183,9 @@ uv run demo.py --log runs/real.jsonl swap --mode real
   local 응답: LLM 게이트웨이란 사용자 애플리케이션과 대형 언어 모델(LLM) 간의 통신을 중개하여 ...
 ```
 
-뜻: 토큰 수가 mock의 10/20 고정값이 아니라 모델이 알려 준 실제 값이고, 지연은 이번에는 약 28초였습니다(작성 환경 기준 실측 50~90초 범위). 로컬 모델이라 비용은 0이어서 "로컬(무료)"입니다. 실제 모드는 내 컴퓨터를 쓰므로 느리고, 실행마다 답과 시간이 다릅니다.
+뜻: 토큰 수가 mock의 10/20 고정값이 아니라 모델이 알려 준 실제 값이고, 지연은 이번에는 약 28초였습니다(작성 환경 실측은 약 28초~1분 30초이고 생각 토큰 수에 따라 크게 달라집니다). 로컬 모델이라 비용은 0이어서 "로컬(무료)"입니다. 실제 모드는 내 컴퓨터를 쓰므로 느리고, 실행마다 답과 시간이 다릅니다.
 
-- **qwen3의 생각 단계**: qwen3는 답하기 전에 "생각"하는 모델이라 출력 토큰을 생각에 먼저 씁니다. `configs/gateway.yaml`의 local `max_tokens`를 512처럼 낮추면 생각만 하다 끝나 "(빈 응답: 생각 단계가 토큰을 다 씀)"이 나옵니다. 그래서 기본값을 2048로 두었습니다.
+- **qwen3의 생각 단계**: qwen3는 답하기 전에 "생각"하는 모델이라 출력 토큰을 생각에 먼저 씁니다. `configs/gateway.yaml`의 local `max_tokens`를 512처럼 낮추면 생각만 하다 끝나 "(빈 응답: 생각 단계가 토큰을 다 씀)"이 나옵니다. 그래서 기본값을 2048로 두었지만, 생각이 아주 길어지면 2048에서도 가끔 빈 응답이 나옵니다.
 - **클라우드 공급자**: `.env.example`을 `.env`로 복사해 키를 넣으면 해당 공급자도 진짜로 부릅니다. 이때는 실제 요금이 청구될 수 있습니다.
 
 ## 어떻게 동작하나요?
@@ -278,7 +278,7 @@ resp = gw.router.completion(model=alias, messages=messages)
 | 처음 실행이 오래 걸림 | 의존성 설치와 LiteLLM 불러오기 | 한 번 설치되면 이후엔 짧아집니다. 전체 실행은 약 28초 |
 | `summary`에 기록이 없다고 나옴 | `runs/calls.jsonl`이 아직 없음 | 먼저 `uv run demo.py` 실행 |
 | real 모드에서 "Ollama에 연결할 수 없어 mock으로 진행합니다" | Ollama가 꺼져 있거나 주소가 다름 | `ollama serve`로 켜고, 주소가 다르면 `.env`의 `OLLAMA_API_BASE` 수정 |
-| real 모드에서 local 응답이 "(빈 응답: 생각 단계가 토큰을 다 씀)" | qwen3가 답하기 전에 "생각"하며 `max_tokens`를 다 씀(기본 2048, 낮추면 발생) | `configs/gateway.yaml`의 local `max_tokens`를 다시 2048 이상으로 |
+| real 모드에서 local 응답이 "(빈 응답: 생각 단계가 토큰을 다 씀)" | qwen3가 답하기 전에 "생각"하며 `max_tokens`를 다 씀(기본 2048에서도 가끔, 낮추면 더 자주 발생) | `configs/gateway.yaml`의 local `max_tokens`를 4096 등으로 올리거나 다시 실행 |
 | Python 3.10 이하에서 설치 실패 | `requires-python`이 3.11 이상 | `uv python install 3.12` 후 실행 |
 | Python 3.15에서 설치 실패 | `requires-python`이 3.14까지 | `uv python install 3.12` 후 실행 |
 | 비용이 실제 청구와 다름 | 패키지 내장 가격표(오프라인)로 계산한 추정값 | 참고용으로만 사용 |
@@ -288,7 +288,7 @@ resp = gw.router.completion(model=alias, messages=messages)
 
 그 밖의 함정 두 가지입니다. 첫째, LiteLLM은 기본적으로 최신 가격표를 원격에서 받아 올 수 있는데, 이 데모는 `gateway/__init__.py`에서 `LITELLM_LOCAL_MODEL_COST_MAP=True`를 기본으로 설정해, 패키지에 든 가격표만 씁니다(오프라인에서도 같은 값이 나오고 시작이 느려지지 않습니다). 둘째, 토큰·비용은 콜백 대신 응답 객체에서 읽고 지연은 `perf_counter`로 앱에서 직접 잽니다. 폴백이 끼어도 "내가 부른 한 번의 총 시간"을 그대로 잴 수 있기 때문입니다.
 
-테스트는 키·Ollama 없이 돕니다(작성 환경에서 11개 통과, 약 17초).
+테스트는 키·Ollama 없이 돕니다(작성 환경에서 11개 통과, 약 20~40초(환경에 따라 다름)).
 
 ```bash
 uv run pytest -q
