@@ -87,7 +87,7 @@ def scene_compare(args, report, calls, config):
                      sum(r["fallback_used"] for r in recs), "%.0f" % (sum(lat) / len(lat)),
                      "%.0f" % report.percentile50(lat), "%.2e" % sum((r["cost_usd"] or 0) for r in recs)])
     print(report.table(["설정", "성공", "폴백 횟수", "평균 지연(ms)", "p50 지연(ms)", "총 추정 비용(USD)"], rows))
-    print("  * 두 yaml 의 차이: num_retries 와 fallbacks 두 곳뿐 (diff configs/no-fallback.yaml configs/with-fallback.yaml)")
+    print("  * 값이 다른 곳: num_retries, fallbacks 두 곳 (나머지는 주석 차이, diff configs/no-fallback.yaml configs/with-fallback.yaml)")
 
 
 def scene_summary(args, report, calls, config):
