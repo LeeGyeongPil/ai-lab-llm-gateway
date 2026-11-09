@@ -1,0 +1,15 @@
+# 개념 예시 — 이 데모는 이 파일을 실행하지 않는다 (프록시 서버 방식).
+# 프록시 방식은 같은 설정을 HTTP 서버(`litellm --config ...`)로 띄우고,
+# 앱은 OpenAI SDK 의 base_url 만 서버 주소로 바꿔 부른다.
+model_list:
+  - model_name: smart
+    litellm_params:
+      model: anthropic/claude-sonnet-4-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+  - model_name: backup
+    litellm_params:
+      model: gpt-4o-mini
+      api_key: os.environ/OPENAI_API_KEY
+router_settings:
+  num_retries: 2
+  fallbacks: [{ smart: [backup] }]
