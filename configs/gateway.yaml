@@ -1,0 +1,41 @@
+# 게이트웨이 설정 — 코드를 안 고치고 이 파일만 바꿔서 모델·재시도·폴백을 바꾼다.
+router_settings:
+  num_retries: 2            # 같은 그룹 안에서 다시 시도하는 횟수
+  timeout: 30               # 한 번 호출의 제한 시간(초)
+  routing_strategy: simple-shuffle
+
+model_list:
+  # 앱이 부르는 별칭(model_name) -> 실제 공급자 모델(litellm_params.model)
+  - model_name: openai
+    litellm_params: { model: gpt-4o-mini }
+  - model_name: anthropic
+    litellm_params: { model: anthropic/claude-sonnet-4-5 }
+  - model_name: gemini
+    litellm_params: { model: gemini/gemini-2.5-flash }
+  - model_name: local
+    litellm_params: { model: "ollama_chat/qwen3:4b", api_base: "os.environ/OLLAMA_API_BASE", max_tokens: 2048 }
+  - model_name: smart            # `demo.py ask` 의 기본 별칭
+    litellm_params: { model: anthropic/claude-sonnet-4-5 }
+  - model_name: primary          # 폴백 장면에서 시나리오가 model 을 덮어쓴다
+    litellm_params: { model: chaos/rate_limit }
+  - model_name: backup
+    litellm_params: { model: gpt-4o-mini }
+
+# primary 가 실패하면 backup 으로, local 이 실패하면 openai 로 넘긴다
+fallbacks:
+  - { primary: [backup] }
+  - { local: [openai] }
+  - { smart: [openai] }
+
+# 장면 2 시나리오: mock 모드에서는 chaos 가 오류를 낸다.
+# real 모드에서는 가능하면 진짜 Ollama 로 같은 상황을 만든다.
+scenarios:
+  server_error:
+    mock: { model: chaos/server_error }
+    real: { model: "ollama_chat/no-such-model:1b" }
+  rate_limit:
+    mock: { model: chaos/rate_limit }
+    real: { model: chaos/rate_limit }          # 429 는 로컬에서 재현 불가 -> 주입
+  timeout:
+    mock: { model: chaos/slow-2000ms, timeout: 0.5 }
+    real: { model: "ollama_chat/qwen3:4b", timeout: 0.5 }

@@ -1,0 +1,10 @@
+# compare 장면 A: 재시도도 폴백도 없다.
+router_settings:
+  num_retries: 0
+  timeout: 30
+  routing_strategy: simple-shuffle
+model_list:
+  - model_name: primary
+    litellm_params: { model: chaos/flaky-FFS }   # 실패·실패·성공 반복
+  - model_name: backup
+    litellm_params: { model: gpt-4o-mini }

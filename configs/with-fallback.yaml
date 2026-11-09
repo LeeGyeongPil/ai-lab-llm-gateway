@@ -1,0 +1,12 @@
+# compare 장면 B: 재시도 1번 + backup 폴백. (no-fallback.yaml 과 아래 두 곳만 다르다)
+router_settings:
+  num_retries: 1            # <- 달라진 곳 1
+  timeout: 30
+  routing_strategy: simple-shuffle
+model_list:
+  - model_name: primary
+    litellm_params: { model: chaos/flaky-FFS }
+  - model_name: backup
+    litellm_params: { model: gpt-4o-mini }
+fallbacks:                  # <- 달라진 곳 2
+  - { primary: [backup] }
