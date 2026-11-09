@@ -1,7 +1,7 @@
 # LLM 게이트웨이 체험 — 모델 갈아 끼우기, 재시도, 폴백, 비용 기록
 
 > **English summary** — A small CLI demo built on the LiteLLM SDK. It calls OpenAI-style, Anthropic, Gemini and local Ollama models through one function, shows how retries and fallbacks play out as a timeline, and logs tokens, estimated cost and latency per call.
-> Run `uv run demo.py` to see everything. The default is a practice (mock) mode that needs no API key (the first install needs network access).
+> Run `uv run demo.py` to see everything. The default is a practice (mock) mode that needs no API key (the first install needs network access). Supports Python 3.11-3.14.
 
 ![전체 실행 화면: 네 장면이 차례로 출력된다](docs/images/01-tour.png)
 <sub>그림 1. `uv run demo.py` 한 번으로 swap, fallback, compare, summary 네 장면이 이어서 나온다.</sub>
@@ -19,7 +19,7 @@ LLM 게이트웨이가 이 역할을 합니다. 앱은 별칭 하나만 부르�
 
 ## 30초 만에 실행하기
 
-준비물: Python 3.10~3.14 (레포는 3.12로 고정)와 [uv](https://docs.astral.sh/uv/). uv 설치: `curl -LsSf https://astral.sh/uv/install.sh | sh`. 최소 리눅스 환경에는 `git`과 `curl`도 필요합니다. API 키와 Ollama는 없어도 됩니다.
+준비물: Python 3.11~3.14 (레포는 3.12로 고정)와 [uv](https://docs.astral.sh/uv/). uv 설치: `curl -LsSf https://astral.sh/uv/install.sh | sh`. 최소 리눅스 환경에는 `git`과 `curl`도 필요합니다. API 키와 Ollama는 없어도 됩니다.
 
 ```bash
 git clone https://github.com/LeeGyeongPil/ai-lab-llm-gateway.git
@@ -279,6 +279,7 @@ resp = gw.router.completion(model=alias, messages=messages)
 | `summary`에 기록이 없다고 나옴 | `runs/calls.jsonl`이 아직 없음 | 먼저 `uv run demo.py` 실행 |
 | real 모드에서 "Ollama에 연결할 수 없어 mock으로 진행합니다" | Ollama가 꺼져 있거나 주소가 다름 | `ollama serve`로 켜고, 주소가 다르면 `.env`의 `OLLAMA_API_BASE` 수정 |
 | real 모드에서 local 응답이 "(빈 응답: 생각 단계가 토큰을 다 씀)" | qwen3가 답하기 전에 "생각"하며 `max_tokens`를 다 씀(기본 2048, 낮추면 발생) | `configs/gateway.yaml`의 local `max_tokens`를 다시 2048 이상으로 |
+| Python 3.10 이하에서 설치 실패 | `requires-python`이 3.11 이상 | `uv python install 3.12` 후 실행 |
 | Python 3.15에서 설치 실패 | `requires-python`이 3.14까지 | `uv python install 3.12` 후 실행 |
 | 비용이 실제 청구와 다름 | 패키지 내장 가격표(오프라인)로 계산한 추정값 | 참고용으로만 사용 |
 | `--model nope` 처럼 없는 별칭을 넣으면 "별칭 nope 이 ... model_list 에 없습니다"가 나오고 종료 코드 2 | yaml에 없는 별칭 | 안내에 나온 사용 가능한 별칭 중에서 고르거나 yaml에 추가 |
@@ -309,6 +310,11 @@ uv run pytest -q
 - [any-llm](https://github.com/mozilla-ai/any-llm) — Python SDK. 공급자 교체(형식 통일)에 집중하고 폴백·라우팅은 문서상 없음.
 - [Portkey Gateway](https://github.com/Portkey-AI/gateway) — Node 서버형. 폴백·재시도·부하 분산을 제공.
 - Bifrost(Maxim AI, Go 서버형) — 성능 지향 게이트웨이. 입문용으로는 과해서 다루지 않았습니다. 출처: [대안 비교 글(벤더 글, 참고만)](https://www.getmaxim.ai/articles/top-litellm-alternatives-in-2026/)
+
+## 변경 이력
+
+- 0.1.1 (2026-11-09): 전이 의존성 filelock 4.2.9 로 보안 업데이트, Python 3.11 이상 필요 (이전에는 3.10도 지원).
+- 0.1.0: 첫 공개.
 
 ## 라이선스
 
