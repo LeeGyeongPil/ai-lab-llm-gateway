@@ -32,7 +32,8 @@ class ConfigTest(unittest.TestCase):
                 del os.environ["OLLAMA_API_BASE"]
             else:
                 os.environ["OLLAMA_API_BASE"] = old
-        self.assertTrue(any("Ollama에 연결할 수 없어 mock으로 진행" in n for n in gw.notices))
+        self.assertEqual([code for code, _ in gw.notices], ["ollama_unreachable"])
+        self.assertEqual(gw.notices[0][1], {"base": "http://127.0.0.1:9"})
         rec = calls.ask(gw, "local", MSGS, "swap", tmp_log())
         self.assertEqual(rec["status"], "ok")
         self.assertTrue(rec["mock"])

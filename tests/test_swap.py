@@ -35,10 +35,14 @@ class SwapTest(unittest.TestCase):
         self.assertGreater(costs["anthropic"], costs["gemini"])
         self.assertGreater(costs["gemini"], costs["openai"])
         # 로컬은 무료로, 미등록(chaos)은 "계산 안 됨" 으로 구분해 표시
-        from gateway import report
-        self.assertEqual(report.cost_text(self.recs["local"]), "로컬(무료)")
+        from gateway import i18n, report
         chaos_rec = dict(self.recs["openai"], provider="chaos", cost_usd=None)
+        i18n.set_lang("ko")                      # 언어를 명시한다 (호스트 로캘에 의존하지 않기)
+        self.assertEqual(report.cost_text(self.recs["local"]), "로컬(무료)")
         self.assertEqual(report.cost_text(chaos_rec), "계산 안 됨")
+        i18n.set_lang("en")
+        self.assertEqual(report.cost_text(self.recs["local"]), "local (free)")
+        self.assertEqual(report.cost_text(chaos_rec), "not computed")
 
 
 if __name__ == "__main__":

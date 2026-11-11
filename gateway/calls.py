@@ -12,6 +12,7 @@ import litellm
 
 from . import chaos as chaos_module
 from .config import provider_of
+from .i18n import GatewayError
 
 DEFAULT_LOG = os.path.join("runs", "calls.jsonl")
 
@@ -26,7 +27,7 @@ def ask(gw, alias, messages, scene, log_path=DEFAULT_LOG):
     n0 = len(chaos.attempts)
     if not gw.deployments(alias):
         known = sorted({d["model_name"] for d in gw.router.model_list})
-        raise ValueError(f"alias {alias!r} is not in model_list of the gateway config. Available: {', '.join(known)}")
+        raise GatewayError("unknown_alias", alias=alias, available=", ".join(known))
     first_model = gw.deployments(alias)[0]["litellm_params"]["model"]
     t0 = time.perf_counter()
     content, reasoning, error_type, resp = None, None, None, None

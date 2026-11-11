@@ -40,7 +40,7 @@ def ollama_alive(base=None):
 
 
 class Gateway:
-    """Router 와 부가 정보(어떤 모델이 mock 인지, 안내 문구)를 묶은 것."""
+    """Router 와 부가 정보(어떤 모델이 mock 인지, 안내 (code, params) 목록)를 묶은 것."""
 
     def __init__(self, router, mock_models, notices, mode):
         self.router = router
@@ -67,7 +67,7 @@ def build_gateway(path, mode="mock", scenario=None):
     if mode == "real":
         ollama_up = ollama_alive()
         if not ollama_up:
-            notices.append("Ollama에 연결할 수 없어 mock으로 진행합니다 (%s)" % ollama_base())
+            notices.append(("ollama_unreachable", {"base": ollama_base()}))  # (code, params): the CLI renders it
 
     # 시나리오가 있으면 primary 배포의 모델·timeout 을 덮어쓴다
     if scenario:

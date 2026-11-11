@@ -2,7 +2,11 @@
 import statistics
 import unicodedata
 
-PRICE_NOTE = "추정 비용은 litellm 1.108.3 내장 가격표 기준이며 실제 청구와 다를 수 있습니다."
+from .i18n import t
+
+
+def price_note():
+    return t("price_note")
 
 
 def width(s):
@@ -28,11 +32,11 @@ def cost_text(rec):
     if rec["status"] != "ok":
         return "-"
     if rec["provider"] == "chaos":
-        return "계산 안 됨"
+        return t("cost.not_computed")
     if rec["provider"] in ("ollama_chat", "ollama"):
-        return "로컬(무료)"
+        return t("cost.local_free")
     if rec["cost_usd"] is None:
-        return "계산 안 됨"
+        return t("cost.not_computed")
     return "%.2e" % rec["cost_usd"]
 
 
@@ -41,23 +45,23 @@ def swap_table(recs):
     for r in recs:
         tok = "-" if r["prompt_tokens"] is None else "%d / %d" % (r["prompt_tokens"], r["completion_tokens"])
         rows.append([r["alias"], r["provider"], r["model"], tok, r["prompt_tokens_counted"] or "-",
-                     cost_text(r), "%.0f" % r["latency_ms"], "MOCK" if r["mock"] else "실제", r["status"]])
-    return table(["별칭", "공급자", "실제 모델", "입력/출력 토큰", "직접 센 프롬프트", "추정 비용(가격표,USD)",
-                  "지연(ms)", "MOCK", "상태"], rows)
+                     cost_text(r), "%.0f" % r["latency_ms"], "MOCK" if r["mock"] else t("cell.real"), r["status"]])
+    return table([t(k) for k in ("col.alias", "col.provider", "col.model", "col.tokens", "col.counted",
+                                 "col.cost", "col.latency", "col.mock", "col.status")], rows)
 
 
 def timeline(rec):
     """시도 단위 타임라인. attempts 는 chaos 가 본 시도, 마지막 줄은 최종 결과."""
     lines = []
     for i, a in enumerate(rec["_attempts"], 1):
-        res = a["error_type"] if a["outcome"] == "error" else "성공"
-        lines.append("  +%5.2fs  시도 %d  chaos/%s -> %s" % (a["t"], i, a["behavior"], res))
+        res = a["error_type"] if a["outcome"] == "error" else t("tl.success")
+        lines.append(t("tl.attempt", t=a["t"], i=i, behavior=a["behavior"], result=res))
     total = rec["latency_ms"] / 1000
     if rec["status"] == "ok":
-        how = "폴백으로 넘어가 응답" if rec["fallback_used"] else "응답"
+        how = t("tl.answered_fallback") if rec["fallback_used"] else t("tl.answered")
         lines.append("  +%5.2fs  %s: %s%s" % (total, how, rec["model"], " (MOCK)" if rec["mock"] else ""))
     else:
-        lines.append("  +%5.2fs  최종 실패: %s" % (total, rec["error_type"]))
+        lines.append("  +%5.2fs  %s: %s" % (total, t("tl.final_failure"), rec["error_type"]))
     return "\n".join(lines)
 
 
@@ -87,7 +91,8 @@ def summary_table(recs):
     rows = [[s["alias"], s["calls"], "%.0f%%" % (s["success_rate"] * 100), s["fallbacks"],
              "%.2e" % s["total_cost_usd"], "%.0f" % s["p50_latency_ms"], s["mock_calls"]]
             for s in summarize(recs)]
-    return table(["별칭", "호출 수", "성공률", "폴백", "총 추정 비용(USD)", "p50 지연(ms)", "MOCK 호출"], rows)
+    return table([t(k) for k in ("col.alias", "col.calls", "col.success_rate", "col.fallbacks",
+                                 "col.total_cost", "col.p50_latency", "col.mock_calls")], rows)
 
 
 def write_markdown(recs, path):
@@ -95,4 +100,4 @@ def write_markdown(recs, path):
     import os
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
-        f.write("# 호출 요약\n\n" + summary_table(recs) + "\n\n" + PRICE_NOTE + "\n")
+        f.write("# " + t("report.title") + "\n\n" + summary_table(recs) + "\n\n" + price_note() + "\n")

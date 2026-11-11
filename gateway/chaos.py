@@ -18,6 +18,8 @@ import time
 import litellm
 from litellm import CustomLLM, ModelResponse
 
+from .i18n import GatewayError
+
 MAX_ATTEMPTS = 1000  # 기록이 무한히 쌓이지 않게 하는 상한
 
 
@@ -83,7 +85,7 @@ class ChaosLLM(CustomLLM):
             self._record(behavior, "ok")
             return self._ok_response(model, model_response)
 
-        raise ValueError(f"알 수 없는 chaos 행동: {behavior}")
+        raise GatewayError("unknown_chaos_behavior", behavior=behavior)
 
 
 # 프로세스에 하나만 둔다. litellm 에 공급자로 등록한다.

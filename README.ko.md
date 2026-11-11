@@ -2,7 +2,7 @@
 
 [English](README.md) | **한국어**
 
-![전체 실행 화면: 네 장면이 차례로 출력된다](docs/images/01-tour.png)
+![전체 실행 화면: 네 장면이 차례로 출력된다](docs/images/01-tour.ko.png)
 <sub>그림 1. `uv run demo.py` 한 번으로 swap, fallback, compare, summary 네 장면이 이어서 나온다.</sub>
 
 ## 한 줄 요약
@@ -32,6 +32,24 @@ uv run demo.py
 
 로컬 Ollama로 진짜 호출을 해 보는 방법은 아래 [real 모드 절](#real-모드-로컬-ollama와-내-키)에 따로 적었습니다.
 
+## 출력 언어
+
+사람이 읽는 출력(제목·표 머리글·안내·오류·`--help`·`runs/report.md`)은 영어와 한국어 중 고를 수 있습니다. 아래 순서로 정하고, 한국어가 아니면 영어입니다.
+
+1. `--lang en|ko` (하위 명령 앞뒤 어디든 가능)
+2. 환경변수 `AI_LAB_LLM_GATEWAY_LANG` (`en` 또는 `ko`)
+3. 로캘 변수 `LC_ALL`, 그다음 `LC_MESSAGES`, 그다음 `LANG` (`ko` 로 시작하면 한국어)
+
+```bash
+uv run demo.py swap --lang en                       # 영어 출력
+AI_LAB_LLM_GATEWAY_LANG=en uv run demo.py summary   # 환경변수로 영어
+LANG=ko_KR.UTF-8 uv run demo.py                     # 시스템 로캘이 한국어면 한국어
+```
+
+문구만 바뀝니다. `runs/calls.jsonl`, 표의 열, 하위 명령·옵션 이름, 종료코드는 그대로입니다. 비용 칸은 영어로 `local (free)`·`not computed`, 한국어로 `로컬(무료)`·`계산 안 됨` 입니다. 이 README의 그림 1~6은 한국어 출력(`--lang ko`)이고 영어 화면은 [README.md](README.md)에 있습니다. 그림 7은 Ollama가 필요해 언어 선택 기능이 생기기 전에 찍은 한국어 출력입니다.
+
+**언어 선택의 알려진 한계:** `configs/*.yaml` 의 주석은 한국어라서 그림 5의 `diff` 에는 어느 언어에서나 한국어 주석 줄이 보입니다. argparse 기본 문구(`usage:`, `options:`)는 파이썬 자체 언어를 따라 영어로 남고, 하위 명령의 `--help` 에는 `--lang` 이 표시되지 않으며(하위 명령 앞에 쓰거나 환경변수를 쓰세요), `compare` 표 아래 각주는 고정 문구입니다.
+
 ## 단계별로 따라 하기
 
 ### 1단계. 같은 코드로 4개 모델 부르기
@@ -40,7 +58,7 @@ uv run demo.py
 uv run demo.py swap
 ```
 
-![swap 표: 4개 공급자, 토큰, 비용, 지연](docs/images/02-swap.png)
+![swap 표: 4개 공급자, 토큰, 비용, 지연](docs/images/02-swap.ko.png)
 <sub>그림 2. 같은 질문을 별칭 4개로 보낸 결과.</sub>
 
 실행 결과(발췌):
@@ -61,7 +79,7 @@ uv run demo.py swap
 uv run demo.py fallback --scenario rate_limit
 ```
 
-![rate_limit 타임라인: 시도 3번 뒤 폴백](docs/images/03-fallback-rate-limit.png)
+![rate_limit 타임라인: 시도 3번 뒤 폴백](docs/images/03-fallback-rate-limit.ko.png)
 <sub>그림 3. 429 오류에서 같은 모델을 3번 시도한 뒤 backup으로 넘어간다.</sub>
 
 실행 결과:
@@ -94,7 +112,7 @@ flowchart LR
 uv run demo.py compare
 ```
 
-![compare 표: 폴백 없음과 있음](docs/images/04-compare.png)
+![compare 표: 폴백 없음과 있음](docs/images/04-compare.ko.png)
 <sub>그림 4. 같은 요청 10개, 설정만 다른 두 번의 실행.</sub>
 
 ```text
@@ -114,7 +132,7 @@ uv run demo.py compare
 uv run demo.py summary
 ```
 
-![summary 표: 별칭별 호출 수, 성공률, 비용, p50](docs/images/05-summary.png)
+![summary 표: 별칭별 호출 수, 성공률, 비용, p50](docs/images/05-summary.ko.png)
 <sub>그림 6. `runs/calls.jsonl`을 별칭별로 집계한 표.</sub>
 
 ```text
@@ -287,7 +305,7 @@ resp = gw.router.completion(model=alias, messages=messages)
 
 그 밖의 함정 두 가지입니다. 첫째, LiteLLM은 기본적으로 최신 가격표를 원격에서 받아 올 수 있는데, 이 데모는 `gateway/__init__.py`에서 `LITELLM_LOCAL_MODEL_COST_MAP=True`를 기본으로 설정해, 패키지에 든 가격표만 씁니다(오프라인에서도 같은 값이 나오고 시작이 느려지지 않습니다). 둘째, 토큰·비용은 콜백 대신 응답 객체에서 읽고 지연은 `perf_counter`로 앱에서 직접 잽니다. 폴백이 끼어도 "내가 부른 한 번의 총 시간"을 그대로 잴 수 있기 때문입니다.
 
-테스트는 키·Ollama 없이 돕니다(작성 환경에서 11개 통과, 약 20~40초(환경에 따라 다름)).
+테스트는 키·Ollama 없이 돕니다(작성 환경에서 48개 통과, 약 30초(환경에 따라 다름). 테스트가 출력 언어를 고정하므로 시스템 로캘과 무관합니다).
 
 ```bash
 uv run pytest -q
@@ -312,6 +330,7 @@ uv run pytest -q
 
 ## 변경 이력
 
+- 0.2.0 (2026-11-11): `--lang en|ko`, `AI_LAB_LLM_GATEWAY_LANG`, 로캘 변수로 영어·한국어 출력을 고를 수 있습니다(한국어가 아니면 영어, 이전에는 한국어 전용). 문구는 `gateway/i18n.py` 에 모았고, 라이브러리 오류는 `code`·`params` 를 갖습니다. `--log` 를 쓸 수 없으면 트레이스백 대신 안내를 내고 종료코드 1 로 끝납니다.
 - 0.1.3 (2026-11-10): 변경 이력에 빠졌던 0.1.2 항목 추가.
 - 0.1.2 (2026-11-09): compare 장면 문구를 표와 맞게 수정, 스크린샷 다시 찍기, 실제 모드 설명을 측정값에 맞춤, CI 잡 타임아웃 추가와 폴백 테스트 타이밍 단언 완화.
 - 0.1.1 (2026-11-09): 전이 의존성 filelock 4.2.9 로 보안 업데이트, Python 3.11 이상 필요 (이전에는 3.10도 지원).
