@@ -1,5 +1,7 @@
 # LLM 게이트웨이 체험 — 모델 갈아 끼우기, 재시도, 폴백, 비용 기록
 
+**한국어** | [English](README.en.md)
+
 > **English summary** — A small CLI demo built on the LiteLLM SDK. It calls OpenAI-style, Anthropic, Gemini and local Ollama models through one function, shows how retries and fallbacks play out as a timeline, and logs tokens, estimated cost and latency per call.
 > Run `uv run demo.py` to see everything. The default is a practice (mock) mode that needs no API key (the first install needs network access). Supports Python 3.11-3.14.
 
